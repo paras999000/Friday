@@ -1,6 +1,6 @@
 import { DeviceSpecs, BuildJob } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string) || '/api';
 
 export async function fetchDeviceSpecs(): Promise<DeviceSpecs> {
   const res = await fetch(`${API_BASE}/firmware/device`);

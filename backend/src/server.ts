@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -31,6 +33,26 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Mount routes
 app.use('/api/boards', boardsRouter);
 app.use('/api/firmware', firmwareRouter);
+
+// Serve static frontend build if present (for unified single-service deployments)
+const possibleDistPaths = [
+  path.resolve(__dirname, '../../frontend/dist'),
+  path.resolve(__dirname, '../../../frontend/dist'),
+  path.resolve(process.cwd(), '../frontend/dist'),
+  path.resolve(process.cwd(), 'frontend/dist'),
+];
+
+for (const distPath of possibleDistPaths) {
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+      if (req.path.startsWith('/api')) return next();
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+    console.log(`[FIRDAY] Serving frontend static assets from ${distPath}`);
+    break;
+  }
+}
 
 // Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
