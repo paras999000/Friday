@@ -53,6 +53,15 @@ export const App: React.FC = () => {
     setView('landing');
   };
 
+  const handleDeviceDisconnected = async () => {
+    try {
+      await flasherService.disconnect();
+    } catch (e) {
+      console.warn('Disconnect error:', e);
+    }
+    setConnectedDevice(null);
+  };
+
   // Perform Build and Flash Execution specifically for ESP32 Dev Module
   const executeFlashing = async () => {
     if (!connectedDevice) return;
@@ -189,7 +198,7 @@ export const App: React.FC = () => {
               <ConnectDevice
                 connectedDevice={connectedDevice}
                 onDeviceConnected={setConnectedDevice}
-                onDeviceDisconnected={() => setConnectedDevice(null)}
+                onDeviceDisconnected={handleDeviceDisconnected}
                 mockMode={mockMode}
                 onContinue={() => {
                   setFlashState('confirm');

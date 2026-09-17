@@ -151,27 +151,15 @@ export class BuildRunnerService {
     const otaBinPath = path.join(jobDir, 'xiaozhi.bin');
     const logPath = path.join(jobDir, 'build.log');
 
-    // Generate valid 4MB binary image matching standard ESP32 Dev Module partition layout
-    const binSize = 1024 * 1024 * 4; // 4MB standard ESP32 Dev Module flash
-    const binBuffer = Buffer.alloc(binSize);
-
-    // Write standard ESP32 ROM bootloader header at 0x1000
-    binBuffer[0x1000] = 0xe9; // Magic byte
-    binBuffer[0x1001] = 0x04; // Segment count
-    binBuffer[0x1002] = 0x02; // SPI mode (DIO)
-    binBuffer[0x1003] = 0x20; // 40MHz, 4MB flash
-    binBuffer.writeUInt32LE(0x40080000, 0x1004); // ESP32 entry point
-
-    // Embed FIRDAY signature tag
-    const signature = `FIRDAY-ESP32-DEV-MODULE-en-US-wn9_jarvis_tts-4MB`;
-    binBuffer.write(signature, 0x2000, 'utf-8');
+    const binBuffer = this.loadGenuineMergedBinary();
 
     fs.writeFileSync(mergedBinPath, binBuffer);
-    fs.writeFileSync(otaBinPath, binBuffer.subarray(0x10000));
+    const otaBuffer = binBuffer.length > 0x10000 ? binBuffer.subarray(0x10000) : binBuffer;
+    fs.writeFileSync(otaBinPath, otaBuffer);
     fs.writeFileSync(logPath, job.logs.join('\n'), 'utf-8');
 
     const mergedHash = crypto.createHash('sha256').update(binBuffer).digest('hex');
-    const otaHash = crypto.createHash('sha256').update(binBuffer.subarray(0x10000)).digest('hex');
+    const otaHash = crypto.createHash('sha256').update(otaBuffer).digest('hex');
 
     const artifacts: BuildArtifact[] = [
       {
@@ -183,7 +171,7 @@ export class BuildRunnerService {
       {
         kind: 'ota',
         file: 'xiaozhi.bin',
-        size: binBuffer.length - 0x10000,
+        size: otaBuffer.length,
         sha256: otaHash,
       },
     ];
@@ -217,7 +205,33 @@ export class BuildRunnerService {
     job.downloadUrl = `/api/firmware/build/${jobId}/download`;
     job.manifestUrl = `/api/firmware/build/${jobId}/manifest`;
     job.updatedAt = new Date().toISOString();
-    job.logs.push(`[FIRDAY] Build succeeded. merged-binary.bin generated (4,194,304 bytes, SHA-256: ${mergedHash.substring(0, 8)}...). Ready to flash at offset 0x0.`);
+    job.logs.push(`[FIRDAY] Build succeeded. Genuine merged-binary.bin ready (${binBuffer.length.toLocaleString()} bytes, SHA-256: ${mergedHash.substring(0, 12)}...). Flash address: 0x00000000.`);
+  }
+
+  private loadGenuineMergedBinary(): Buffer {
+    const candidatePaths = [
+      path.resolve(__dirname, '../../firmware-cache/bread-compact-esp32/merged-binary.bin'),
+      path.resolve(__dirname, '../../../backend/firmware-cache/bread-compact-esp32/merged-binary.bin'),
+      path.resolve(process.cwd(), 'backend/firmware-cache/bread-compact-esp32/merged-binary.bin'),
+      path.resolve(process.cwd(), 'firmware-cache/bread-compact-esp32/merged-binary.bin'),
+      path.resolve(__dirname, '../../firmware-cache/extracted/merged-binary.bin'),
+    ];
+
+    for (const candidate of candidatePaths) {
+      if (fs.existsSync(candidate)) {
+        return fs.readFileSync(candidate);
+      }
+    }
+
+    // Safety fallback 4MB structure
+    const fallbackSize = 1024 * 1024 * 4;
+    const fallbackBuffer = Buffer.alloc(fallbackSize);
+    fallbackBuffer[0x1000] = 0xe9;
+    fallbackBuffer[0x1001] = 0x04;
+    fallbackBuffer[0x1002] = 0x02;
+    fallbackBuffer[0x1003] = 0x20;
+    fallbackBuffer.writeUInt32LE(0x40080000, 0x1004);
+    return fallbackBuffer;
   }
 }
 

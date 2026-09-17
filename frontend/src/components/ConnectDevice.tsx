@@ -104,6 +104,11 @@ export const ConnectDevice: React.FC<ConnectDeviceProps> = ({
               )}
             </button>
 
+            {/* Practical hardware connection tip */}
+            <p className="mt-3.5 text-xs font-mono text-firday-dim max-w-sm text-center">
+              💡 <span className="text-firday-muted">Hardware tip:</span> Use a USB data cable. If auto-sync fails, hold the <span className="text-white font-semibold">BOOT</span> button on your ESP32 board while clicking Connect.
+            </p>
+
             {/* Troubleshooting bootloader help */}
             <TroubleshootingPanel />
           </div>
