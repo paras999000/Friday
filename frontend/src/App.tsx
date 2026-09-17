@@ -282,6 +282,13 @@ export const App: React.FC = () => {
             <span>v2.5.0</span>
           </div>
         </div>
+
+        {/* Creator attribution */}
+        <div className="mt-4 pt-3 border-t border-white/[0.04] text-center">
+          <p className="text-firday-muted text-xs sm:text-[13px] tracking-wide font-sans">
+            🛠️ Designed with purpose. Built by <span className="text-white font-semibold">Himanshu Makhe</span>.
+          </p>
+        </div>
       </footer>
 
       {/* Modals */}
