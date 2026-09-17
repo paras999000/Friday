@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production build outputs
+dist/
+*/dist/
+build/
+firmware/build/
+
+# Firmware artifacts & releases
+artifacts/
+firmware/releases/
+firmware/managed_components/
+
+# Environment and local configs
+.env
+.env.local
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
