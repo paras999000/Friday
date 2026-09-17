@@ -51,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <a
-            href="https://github.com/78/xiaozhi-esp32"
+            href="https://github.com/paras999000/Friday"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-firday-muted hover:text-white transition-colors rounded-lg hover:bg-white/[0.04]"
